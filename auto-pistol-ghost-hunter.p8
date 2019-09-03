@@ -6,6 +6,10 @@ __lua__
 function _init()
 	tme=0
 	
+	-- directions
+	dirx={-1,1,0,0}
+	diry={0,0,-1,1}
+	
 	-- player
 	pl_run=new_anim({2,3,2,4},10,1,2)
 	pl_idle=new_anim({1,2},10,1,2)
@@ -64,8 +68,7 @@ end
 -->8
 --tools
 
-dirx={-1,1,0,0}
-diry={0,0,-1,1}
+
 
 function ospr(_n,_x,_y,_w,_h,_flp,_oc)
 	pal(10,_oc)
