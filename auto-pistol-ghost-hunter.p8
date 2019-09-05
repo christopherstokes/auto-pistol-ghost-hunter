@@ -1,45 +1,58 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
--- main funcs
+--main funcs
 
 function _init()
 	tme=0
+	
+	friction=0.95
 	
 	-- directions
 	dirx={-1,1,0,0}
 	diry={0,0,-1,1}
 	
-	-- player
-	pl_run=new_anim({2,3,2,4},10,1,2)
-	pl_idle=new_anim({1,2},10,1,2)
-	pl_flp=false
+	player_init()
 	
-	zmb_run=new_anim({34,35,36,35},10,1,2)
+	zmb_run=new_anim({34,35,36,35},15,1,2)
 	zmb_x=48
 	zmb_y=-32
+	
+	gst_run=new_anim({32,33})
+	gst_x=-32
+	gst_y=96
+	
+	skl_run=new_anim({48,49})
+	skl_x=160
+	skl_y=32
 end
 
 function _update60()
-	upd_anim(pl_run)
+	upd_anim(pl.anims[pl.ca])
 	upd_anim(zmb_run)
+	upd_anim(gst_run)
+	upd_anim(skl_run)
 	
 	zmb_y+=0.25
 	if(zmb_y>128)zmb_y=-32
 	
-	if btnp(⬅️) then 
-	 pl_flp=true
-	end
-	if btnp(➡️) then
-		pl_flp=false
-	end
+	gst_x+=0.30
+	if(gst_x>128)gst_x=-32
+	
+	skl_x-=0.30
+	if(skl_x<-8)skl_x=160
+	
+	pl.upd()
+
 	tme+=1
 end
 
 function _draw()
 	cls(9)
-	drw_anim(64,64,pl_run,pl_flp)
+	drw_anim(pl.x,pl.y,pl.anims[pl.ca],pl.flp)
 	drw_anim(zmb_x,zmb_y,zmb_run)
+	drw_anim(gst_x,gst_y,gst_run)
+	drw_anim(skl_x,skl_y,skl_run,true)
 end
 -->8
 --animations
@@ -57,8 +70,8 @@ end
 function	upd_anim(anim)
 	if tme%anim.t==0 then
 		anim.cf+=1
-		if(anim.cf>#anim.f)anim.cf=1
 	end
+	if(anim.cf>#anim.f)anim.cf=1
 end
 
 function drw_anim(_x,_y,_anim,_flp)
@@ -67,8 +80,6 @@ function drw_anim(_x,_y,_anim,_flp)
 end
 -->8
 --tools
-
-
 
 function ospr(_n,_x,_y,_w,_h,_flp,_oc)
 	pal(10,_oc)
@@ -97,6 +108,7 @@ end
 function recycle_actor()
 end
 
+-- not sure
 function add_component()
 end
 
@@ -112,7 +124,11 @@ blocker={}
 chaser={}
 healer={}
 
-function mover.init()
+function mover.init(_a)
+	function	_a:move(dx,dy)
+		self.x+=dx
+		self.y+=dy
+	end
 end
 
 function exploder.init()
@@ -128,6 +144,58 @@ function chaser.init()
 end
 
 function healer.init()
+end
+-->8
+-- player
+function player_init()
+	pl={
+		x=64,
+		y=64,
+		spd=0.5,
+		acc=0.035,
+		dx=0,
+		dy=0,
+		anims={
+			idle=new_anim({1,2},15,1,2)
+			,move=new_anim({2,3,2,4},10,1,2)
+		},
+		ca="idle",
+		flp=false
+	}
+	
+	mover.init(pl)
+	
+	function pl.upd()
+		pl.dx*=friction
+		pl.dy*=friction
+	
+		if btn(⬅️) then 
+		 pl.flp=true
+		 pl.dx-=pl.acc
+		end
+		if btn(➡️) then
+			pl.flp=false
+			pl.dx+=pl.acc
+		end
+		if btn(⬆️) then
+			pl.dy-=pl.acc
+		end
+		if btn(⬇️) then
+			pl.dy+=pl.acc
+		end
+		
+		if(pl.dx>pl.spd)pl.dx=pl.spd
+		if(pl.dx<-pl.spd)pl.dx=-pl.spd
+		if(pl.dy>pl.spd)pl.dy=pl.spd
+		if(pl.dy<-pl.spd)pl.dy=-pl.spd
+		
+		if (pl.dy==0 and pl.dx==0) then
+			pl.ca="idle"
+		else
+			pl.ca="move"
+			pl:move(pl.dx,pl.dy)
+		end
+	end
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
